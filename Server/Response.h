@@ -9,6 +9,8 @@ class Response
 {
 public:
     Response();
+
+    Response(int statusCode,string seasonPhrase,string contentType,int contentLength,string responseBody);
     ~Response();
     int getStatusCode();
     string getReasonPhase();
@@ -24,7 +26,7 @@ public:
 private:
     // Status Line
     int statusCode;
-    string seasonPhrase;
+    string reasonPhrase;
     // Headers
     string contentType;
     int contentLength;

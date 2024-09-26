@@ -32,20 +32,19 @@ int Client::establishConnectionWithServer() const
       cerr << "Error: Could not connect to server" << endl;
       return -1; // Return an error code
     }
-
     cout << "LOG:Connected to server successfully" << endl;
-    
-    const char *message = "Hello, server!";
+
+    const char *message = "0simpleHTML.html";
     send(clientSocket, message, strlen(message), 0);
     return 0; // Return success
   }
 }
-Request* Client::makeGetRequest() const
+Request *Client::makeGetRequest() const
 {
   string uri;
   cout << "Insert the URI :" << endl;
   cin >> uri;
-  Request* request= new Request("GET",uri);
+  Request *request = new Request("GET", uri);
   return request;
 }
 // int Client::sendRequest(Request &request) const
@@ -54,7 +53,20 @@ Request* Client::makeGetRequest() const
 // void Client::readResponse(Response &response) const
 // {
 // }
-
+int Client::readResponse() const
+// socketServer=server.getServerSocket()
+{
+  // recieving data
+  char buffer[10000] = {0};
+  int received = recv(clientSocket, buffer, sizeof(buffer), 0);
+  if (received == -1)
+  {
+    cout << "Error encoutered when trying to receive from Server" << endl;
+    return received;
+  }
+  cout << "Message from Server: " <<endl<< buffer << endl;
+  return received;
+}
 Client::~Client()
 {
   close(clientSocket);

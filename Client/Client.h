@@ -25,7 +25,7 @@ public:
     Request *makeGetRequest() const;
     Request *makePostRequest() const;
     int sendRequest(Request &request) const;
-    void readResponse(Response &response) const;
+    int readResponse() const;
 
 private:
     int clientSocket;

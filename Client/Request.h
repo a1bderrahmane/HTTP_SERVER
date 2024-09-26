@@ -12,7 +12,7 @@ public:
     // Public member functions
     Request(string method, string uri, string host = "", string contentType = "", int contentLength = 0, string requestBody = "");  // Constructor
     ~Request(); // Destructor
-
+    Request();
     // getters
     string getMethod()const;
     string getURI()const;

@@ -4,7 +4,9 @@
 using namespace std;
 int main()
 {
-    Client client ;
+    Client client;
     client.establishConnectionWithServer();
+    client.readResponse();
+
     return 0;
 }

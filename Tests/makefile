@@ -17,12 +17,12 @@ all: tests
 tests: $(CLIENT_TEST_EXEC) $(SERVER_TEST_EXEC)
 
 # Compile client tests (includes Client and Request sources)
-$(CLIENT_TEST_EXEC): ClientTests.o Client.o Request.o
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(CLIENT_TEST_EXEC) ClientTests.o Client.o Request.o
+$(CLIENT_TEST_EXEC): ClientTests.o Client.o Request.o Response.o
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(CLIENT_TEST_EXEC) ClientTests.o Client.o Request.o Response.o
 
 # Compile server tests (includes Server and Response sources)
-$(SERVER_TEST_EXEC): ServerTests.o Server.o Response.o
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(SERVER_TEST_EXEC) ServerTests.o Server.o Response.o
+$(SERVER_TEST_EXEC): ServerTests.o Server.o Response.o Request.o
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(SERVER_TEST_EXEC) ServerTests.o Server.o Response.o Request.o
 
 # Compile individual test object files
 ClientTests.o: ClientTests.cpp
