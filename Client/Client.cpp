@@ -33,11 +33,12 @@ int Client::establishConnectionWithServer() const
       return -1; // Return an error code
     }
 
-    cout << "Connected to server successfully" << endl;
+    cout << "LOG:Connected to server successfully" << endl;
+    
+    const char *message = "Hello, server!";
+    send(clientSocket, message, strlen(message), 0);
     return 0; // Return success
   }
-  const char *message = "Hello, server!";
-  send(clientSocket, message, strlen(message), 0);
 }
 Request* Client::makeGetRequest() const
 {

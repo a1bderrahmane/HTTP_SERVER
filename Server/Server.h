@@ -17,6 +17,7 @@ public:
     Server();
     ~Server();
     int establishConnectionWithClient() const;
+    int receiveRequest()const;
     Response makeResponse() const;
     int sendResponse(Response &response) const;
     void readRequest(Request &request) const;

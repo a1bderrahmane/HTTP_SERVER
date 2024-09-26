@@ -19,17 +19,36 @@ Server::Server()
 }
 int Server::establishConnectionWithClient() const
 {
-    listen(serverSocket, 5);   // listening to the assigned socket
-    sockaddr_in clientAddress; // Structure to hold client's address (IPv4)
-    socklen_t clientAddressLen = sizeof(clientAddress);
+    listen(serverSocket, 5); // listening to the assigned socket
+
+    sockaddr_in clientAddress;                          // Structure to hold client's address (IPv4)
+    socklen_t clientAddressLen = sizeof(clientAddress); // Size of the address structure
+
     int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientAddressLen);
+
+    char clientIP[INET_ADDRSTRLEN]; // Buffer to hold the IP address in string form
+
+    // Convert the client's IP address from numeric form to readable form
+    inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
+
+    int clientPort = ntohs(clientAddress.sin_port); // Convert the client's port number from network to host byte order
+
+    cout << "Client connected: IP = " << clientIP << ", Port = " << clientPort << endl;
+    // recieving data
     char buffer[1024] = {0};
     recv(clientSocket, buffer, sizeof(buffer), 0);
     cout << "Message from client: " << buffer
          << endl;
+
     return clientSocket;
 }
 
+
+
+int Server::receiveRequest()const
+{
+
+}
 Server::~Server()
 {
     close(serverSocket);
