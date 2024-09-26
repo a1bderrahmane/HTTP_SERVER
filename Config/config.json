@@ -1,0 +1,11 @@
+{
+    "server": {
+        "host": "127.0.0.1",
+        "port": 8080,
+        "max_clients": 100
+    },
+    "client": {
+        "server_host": "127.0.0.1",
+        "server_port": 8080
+    }
+}
