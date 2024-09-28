@@ -42,26 +42,60 @@ int Server::establishConnectionWithClient() const
 }
 Request Server::receiveRequest(int clientSocket) const
 {
-    // recieving data
-    Request request;
-
     char buffer[1024] = {0};
-    int received = recv(clientSocket, buffer, sizeof(buffer), 0);
-    if (received == -1)
-    {
-        cerr << "Error encoutered when trying to receive from client" << endl;
+    string requestMessage = "";
+    int received;
+
+    // Read the message in one go (assuming it fits in the buffer)
+    received = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+    if (received < 0) {
+        cerr << "Error encountered when trying to receive from client" << endl;
+        Request request;
         return request;
     }
-    cout << "Message from client: " << buffer << endl;
-    int method = int(buffer[0]) - int('0');
+
+    buffer[received] = '\0';  // Null-terminate the buffer
+    requestMessage = string(buffer);  // Store the received message as a string
+
+
+    // Split the request by lines
+    istringstream requestStream(requestMessage);
+    string firstLine, bodyLine;
+
+    // Read the first line to determine the method and URI
+    getline(requestStream, firstLine);
+
+    // Check the first character to determine the method
     string HTTPmethod;
-    if (method == 0)
-    {
+    if (firstLine[0] == '0') {
         HTTPmethod = "GET";
     }
-    string uri = string(buffer + 1);
-    request.setURI(uri);
+    else if (firstLine[0] == '1') {
+        HTTPmethod = "POST";
+    }
+    else {
+        cerr << "Invalid method identifier in the request!" << endl;
+        Request request;
+        return request;
+    }
+
+    // Extract the URI from the rest of the first line
+    string uri = firstLine.substr(1);
+
+    // Read the second line as the body content (for POST requests)
+    if (HTTPmethod == "POST") {
+        getline(requestStream, bodyLine);  // Read the second line as the body content
+    }
+
+    // Create and populate the Request object
+    Request request;
     request.setMethod(HTTPmethod);
+    request.setURI(uri);
+
+    if (HTTPmethod == "POST") {
+        request.setRequestBody(bodyLine);  // Set the request body for POST
+    }
+
     return request;
 }
 // int Server:: sendResponse(Response &response) const
@@ -130,6 +164,44 @@ void Server::makeResponse(Request request, int clientSocket) const
 
         // Close the file
         file.close();
+    }
+    else if (HTTPmethod == "POST")
+    {
+        // Handle POST request
+        Response response;
+        string uri = request.getURI(); // Get the URI from the request
+
+        // Define the base path for saving files
+        string filePath = "../Server/Data/" + uri;
+
+        // Create directories if necessary
+        filesystem::path dirPath = filesystem::path(filePath).parent_path();
+        filesystem::create_directories(dirPath);
+
+        // Write the request body to the file
+        ofstream outFile(filePath);
+        if (!outFile.is_open())
+        {
+            // Failed to create or open the file, respond with an error
+            response.setStatusCode(500);
+            response.setReasonPhrase("Internal Server Error");
+            response.setContentype("text/plain");
+            response.setResponseBody("500 Internal Server Error: Unable to create file");
+            sendResponse(clientSocket, response);
+            return;
+        }
+
+        // Write the request body to the file
+        cout << "request body :" << request.getRequestBody();
+        outFile << request.getRequestBody();
+        outFile.close();
+
+        // Send a 201 Created response after successful file creation
+        response.setStatusCode(201);
+        response.setReasonPhrase("Created");
+        response.setContentype("text/plain");
+        response.setResponseBody("File created successfully at: " + filePath);
+        sendResponse(clientSocket, response);
     }
     else
     {

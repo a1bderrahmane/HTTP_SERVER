@@ -8,6 +8,7 @@
 #include <set>
 #include <vector>
 #include <fstream>
+#include <filesystem>
 #include <unistd.h>  // For getcwd
 #include <limits.h>  // For PATH_MAX
 #include "Response.h"

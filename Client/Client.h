@@ -22,7 +22,7 @@ public:
     ~Client(); // Destructor
 
     int establishConnectionWithServer() const;
-    Request *makeGetRequest() const;
+    Request *makeRequest(const string& method) const;
     Request *makePostRequest() const;
     int sendRequest(Request &request) const;
     int readResponse() const;

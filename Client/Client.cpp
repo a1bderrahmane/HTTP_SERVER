@@ -32,27 +32,52 @@ int Client::establishConnectionWithServer() const
       cerr << "Error: Could not connect to server" << endl;
       return -1; // Return an error code
     }
-    cout << "LOG:Connected to server successfully" << endl;
-
-    const char *message = "0simpleHTML.html";
-    send(clientSocket, message, strlen(message), 0);
+    cout << "Connected to server successfully" << endl;
     return 0; // Return success
   }
 }
-Request *Client::makeGetRequest() const
+
+Request *Client::makeRequest(const string &method) const
 {
   string uri;
-  cout << "Insert the URI :" << endl;
-  cin >> uri;
-  Request *request = new Request("GET", uri);
+  string message;
+  Request *request = nullptr;
+
+  if (method == "GET")
+  {
+    // Handle GET request
+    uri = "simpleHTML.html";
+    message = "0" + uri; // Prefix GET requests with "0"
+    request = new Request(method, uri);
+  }
+  else if (method == "POST")
+  {
+    // Handle POST request
+    uri = "experiment.txt"; // Example path where the data will be stored
+    message = "1" + uri;    // Prefix POST requests with "1"
+
+    request = new Request(method, uri);
+
+    string bodyContent = "Experimenting with POST request";
+    message += "\r\n";
+    request->setRequestBody(bodyContent);
+    message += bodyContent;
+
+    // Set the appropriate content type
+    request->setContentType("text/plain");
+  }
+  if (request == nullptr)
+  {
+    cerr << "Error: Unsupported HTTP method!" << endl;
+    return nullptr;
+  }
+  cout << "i am sending :" << message << endl;
+  const char *c_message = message.c_str();
+  send(clientSocket, c_message, strlen(c_message), 0);
+
   return request;
 }
-// int Client::sendRequest(Request &request) const
-// {
-// }
-// void Client::readResponse(Response &response) const
-// {
-// }
+
 int Client::readResponse() const
 // socketServer=server.getServerSocket()
 {
@@ -64,7 +89,8 @@ int Client::readResponse() const
     cout << "Error encoutered when trying to receive from Server" << endl;
     return received;
   }
-  cout << "Message from Server: " <<endl<< buffer << endl;
+  cout << "Message from Server: " << endl
+       << buffer << endl;
   return received;
 }
 Client::~Client()
