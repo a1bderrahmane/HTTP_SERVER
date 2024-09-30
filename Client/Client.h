@@ -31,5 +31,4 @@ private:
     int clientSocket;
     sockaddr_in *serverAddress;
 };
-
 #endif // CLIENT_H

@@ -3,6 +3,11 @@
 #include "../Client/Request.h"
 
 #define port 8080
+void handleClient(int socket, Server &server)
+{
+    Request request = server.receiveRequest(socket);
+    server.makeResponse(request, socket);
+}
 Server::Server()
 {
     // creating server socket
@@ -19,44 +24,60 @@ Server::Server()
     this->serverAddress->sin_family = AF_INET;
     this->serverAddress->sin_port = htons(port);
     bind(serverSocket, (struct sockaddr *)serverAddress, sizeof(*serverAddress));
+    listen(serverSocket, 2); // listening to the assigned socket
 }
-int Server::establishConnectionWithClient() const
+
+int Server::establishConnectionWithClients()
 {
-    listen(serverSocket, 5); // listening to the assigned socket
+    while (true)
+    {
+        sockaddr_in clientAddress;
+        socklen_t clientAddressLen = sizeof(clientAddress);
+        int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientAddressLen);
 
-    sockaddr_in clientAddress;                          // Structure to hold client's address (IPv4)
-    socklen_t clientAddressLen = sizeof(clientAddress); // Size of the address structure
+        if (clientSocket < 0)
+        {
+            cerr << "Error: Failed to accept client connection" << endl;
+            continue;
+        }
+        // Convert the client's IP address to a readable format
+        char clientIP[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
+        int clientPort = ntohs(clientAddress.sin_port);
 
-    int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientAddressLen);
-
-    char clientIP[INET_ADDRSTRLEN]; // Buffer to hold the IP address in string form
-
-    // Convert the client's IP address from numeric form to readable form
-    inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
-
-    int clientPort = ntohs(clientAddress.sin_port); // Convert the client's port number from network to host byte order
-
-    cout << "Client connected: IP = " << clientIP << ", Port = " << clientPort << endl;
-
-    return clientSocket;
+        cout << "Client connected: IP = " << clientIP << ", Port = " << clientPort << endl;
+        if (clientsWaiting.size() >= 4)
+        {
+            for (auto &th : clientsWaiting)
+            {
+                th.join();
+            }
+            clientsWaiting.clear();
+        }
+        clientsWaiting.emplace_back([this, clientSocket]()
+                                    { handleClient(clientSocket, *this); });
+    }
+    return 0;
 }
+
 Request Server::receiveRequest(int clientSocket) const
 {
+
     char buffer[1024] = {0};
     string requestMessage = "";
     int received;
 
     // Read the message in one go (assuming it fits in the buffer)
     received = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
-    if (received < 0) {
+    if (received < 0)
+    {
         cerr << "Error encountered when trying to receive from client" << endl;
         Request request;
         return request;
     }
 
-    buffer[received] = '\0';  // Null-terminate the buffer
-    requestMessage = string(buffer);  // Store the received message as a string
-
+    buffer[received] = '\0';         // Null-terminate the buffer
+    requestMessage = string(buffer); // Store the received message as a string
 
     // Split the request by lines
     istringstream requestStream(requestMessage);
@@ -67,13 +88,16 @@ Request Server::receiveRequest(int clientSocket) const
 
     // Check the first character to determine the method
     string HTTPmethod;
-    if (firstLine[0] == '0') {
+    if (firstLine[0] == '0')
+    {
         HTTPmethod = "GET";
     }
-    else if (firstLine[0] == '1') {
+    else if (firstLine[0] == '1')
+    {
         HTTPmethod = "POST";
     }
-    else {
+    else
+    {
         cerr << "Invalid method identifier in the request!" << endl;
         Request request;
         return request;
@@ -83,8 +107,9 @@ Request Server::receiveRequest(int clientSocket) const
     string uri = firstLine.substr(1);
 
     // Read the second line as the body content (for POST requests)
-    if (HTTPmethod == "POST") {
-        getline(requestStream, bodyLine);  // Read the second line as the body content
+    if (HTTPmethod == "POST")
+    {
+        getline(requestStream, bodyLine); // Read the second line as the body content
     }
 
     // Create and populate the Request object
@@ -92,15 +117,14 @@ Request Server::receiveRequest(int clientSocket) const
     request.setMethod(HTTPmethod);
     request.setURI(uri);
 
-    if (HTTPmethod == "POST") {
-        request.setRequestBody(bodyLine);  // Set the request body for POST
+    if (HTTPmethod == "POST")
+    {
+        request.setRequestBody(bodyLine); // Set the request body for POST
     }
 
     return request;
 }
-// int Server:: sendResponse(Response &response) const
-// {
-// }
+
 int Server::sendResponse(int clientSocket, Response &response) const
 {
     string httpResponse;
@@ -176,7 +200,7 @@ void Server::makeResponse(Request request, int clientSocket) const
 
         // Create directories if necessary
         filesystem::path dirPath = filesystem::path(filePath).parent_path();
-        filesystem::create_directories(dirPath);
+        // filesystem::create_directories(dirPath);
 
         // Write the request body to the file
         ofstream outFile(filePath);

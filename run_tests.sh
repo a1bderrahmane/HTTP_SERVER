@@ -12,5 +12,6 @@ sleep 5
 gnome-terminal -- bash -c "cd Tests && ./server_test_executable; exec bash"
 
 # sleep 0.01
-
-gnome-terminal -- bash -c "cd Tests && ./client_test_executable; exec bash"
+for i in {1..10}; do
+    gnome-terminal -- bash -c "cd Tests && ./client_test_executable; exec bash" &
+done

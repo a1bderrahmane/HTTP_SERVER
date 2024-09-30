@@ -9,12 +9,18 @@ int main()
     printLog("This is the Server's side");
     Server server;
     printLog("establishing connection with the client") ;
-    int socket = server.establishConnectionWithClient();
+    server.establishConnectionWithClients();
+
+    /* printLog("This is the Server's side");
+    Server server;
+    printLog("establishing connection with the client") ;
+    int socket = server.establishConnectionWithClients();
     printLog("receiving the request from the client");
     Request request =server.receiveRequest(socket);
     cout<<request.getMethod()<<endl;
     cout<<"response body :"<<request.getRequestBody()<<endl;
     printLog("sending a response to the client");
-    server.makeResponse(request,socket);
+    server.makeResponse(request,socket); */
+
     return 0;
 }
